@@ -81,7 +81,7 @@ class Game:
         if self.__board[x][y] == 3:
             return "red"
         if self.__board[x][y] == 4:
-            return "yellow"
+            return "orange"
         return "black"
 
     def init_board(self):
@@ -120,6 +120,27 @@ class Game:
             if self.__selected_pawn == (-1, -1):
                 return
             selected_x, selected_y = self.__selected_pawn
+            if self.is_pawn_a_tower(selected_x, selected_y):
+                if not (selected_x == x or selected_y == y):
+                    return
+                if selected_x == x:
+                    for i in range(min(y, selected_y) + 1, max(y, selected_y)):
+                        if self.__board[x][i] != 0:
+                            return
+                else:
+                    for i in range(min(x, selected_x) + 1, max(x, selected_x)):
+                        if self.__board[i][y] != 0:
+                            return
+            else:
+                if not abs(x - selected_x) == abs(y - selected_y):
+                    return
+                x_step = 1 if x > selected_x else -1
+                y_step = 1 if y > selected_y else -1
+
+                for i in range(1, abs(x - selected_x)):
+                    if self.__board[x + i * x_step][y + i * y_step] != 0:
+                        return
+
             self.move(selected_x, selected_y, x, y, self.__board[selected_x][selected_y])
             self.__selected_pawn = (-1, -1)
             self.invert_player()
@@ -129,7 +150,7 @@ class Game:
             self.__selected_pawn = (-1, -1)
             self.update()
             return
-        if not self.is_player_pawn(x, y):
+        if not self.is_player(x, y):
             return
         self.__selected_pawn = (x, y)
 
@@ -150,7 +171,7 @@ class Game:
     def get_current_player(self):
         return self.__current_player_index
 
-    def is_player_pawn(self, x, y):
+    def is_player(self, x, y):
         if self.__current_player_index == 0:
             return self.__board[x][y] == 1 or self.__board[x][y] == 2
         if self.__current_player_index == 1:
@@ -159,6 +180,9 @@ class Game:
 
     def invert_player(self):
         self.__current_player_index = 1 if self.__current_player_index == 0 else 0
+
+    def is_pawn_a_tower(self, x, y):
+        return self.__board[x][y] == 1 or self.__board[x][y] == 3
 
     def move(self, old_x, old_y, new_x, new_y, type):
         self.__board[old_x][old_y] = 0
