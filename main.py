@@ -43,8 +43,9 @@ class Game:
         self.__text1.pack(padx=20, pady=20)
 
         self.__n = n
+        self.__current_player = []
         self.__board = self.init_board()
-        self.__current_player = 1
+        self.__current_player_index = 0
         self.__selected_pawn = (-1, -1)
 
         self.__grid = []
@@ -100,6 +101,8 @@ class Game:
             for j in range(self.__n // 2):
                 board[i][j] = 3
         board[self.__n - 1][0] = 4
+
+        self.__current_player = [Player(0, self.__n - 1, self.__n), Player(self.__n - 1, 0, self.__n)]
         return board
 
     def on_click(self, event):
@@ -119,11 +122,14 @@ class Game:
             selected_x, selected_y = self.__selected_pawn
             self.move(selected_x, selected_y, x, y, self.__board[selected_x][selected_y])
             self.__selected_pawn = (-1, -1)
+            self.invert_player()
             self.update()
             return
         if self.__selected_pawn == (x, y):
             self.__selected_pawn = (-1, -1)
             self.update()
+            return
+        if not self.is_player_pawn(x, y):
             return
         self.__selected_pawn = (x, y)
 
@@ -142,14 +148,24 @@ class Game:
                                          outline=selected)
 
     def get_current_player(self):
-        return "aa"
+        return self.__current_player_index
+
+    def is_player_pawn(self, x, y):
+        if self.__current_player_index == 0:
+            return self.__board[x][y] == 1 or self.__board[x][y] == 2
+        if self.__current_player_index == 1:
+            return self.__board[x][y] == 3 or self.__board[x][y] == 4
+        return False
+
+    def invert_player(self):
+        self.__current_player_index = 1 if self.__current_player_index == 0 else 0
 
     def move(self, old_x, old_y, new_x, new_y, type):
         self.__board[old_x][old_y] = 0
         self.__board[new_x][new_y] = type
 
     def update_labels(self):
-        self.__current_player_text.set(self.get_current_player())
+        self.__current_player_text.set(f"Player {self.get_current_player() + 1}")
 
 
 game = Game(8, 60)
