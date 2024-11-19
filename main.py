@@ -55,10 +55,14 @@ class Game:
                 self.__canvas.create_rectangle(
                     i * pixel_size, j * pixel_size, (i + 1) * pixel_size, (j + 1) * pixel_size, outline="black"
                 )
-                circle = self.__canvas.create_oval(i * pixel_size + 4, j * pixel_size + 4,
-                                                   (i + 1) * pixel_size - 4, (j + 1) * pixel_size - 4, outline="white",
-                                                   width=4)
-                row.append(circle)
+                circle_parent = self.__canvas.create_oval(i * pixel_size + 4, j * pixel_size + 4,
+                                                          (i + 1) * pixel_size - 4, (j + 1) * pixel_size - 4,
+                                                          outline="black",
+                                                          width=4)
+                self.__canvas.create_oval(i * pixel_size + 6, j * pixel_size + 6,
+                                          (i + 1) * pixel_size - 6, (j + 1) * pixel_size - 6, outline="white",
+                                          width=2)
+                row.append(circle_parent)
             self.__grid.append(row)
 
         self.__canvas.bind('<Button-1>', self.on_click)
@@ -69,6 +73,14 @@ class Game:
     def get_color_at(self, x, y):
         if self.__board[x][y] == 0:
             return "white"
+        if self.__board[x][y] == 1:
+            return "blue"
+        if self.__board[x][y] == 2:
+            return "pink"
+        if self.__board[x][y] == 3:
+            return "red"
+        if self.__board[x][y] == 4:
+            return "yellow"
         return "black"
 
     def init_board(self):
@@ -82,10 +94,12 @@ class Game:
         for i in range(self.__n // 2):
             for j in range(self.__n // 2, self.__n):
                 board[i][j] = 1
+        board[0][self.__n - 1] = 2
 
         for i in range(self.__n // 2, self.__n):
             for j in range(self.__n // 2):
-                board[i][j] = 1
+                board[i][j] = 3
+        board[self.__n - 1][0] = 4
         return board
 
     def on_click(self, event):
@@ -103,7 +117,11 @@ class Game:
             if self.__selected_pawn == (-1, -1):
                 return
             selected_x, selected_y = self.__selected_pawn
-            self.move(selected_x, selected_y, x, y)
+            self.move(selected_x, selected_y, x, y, self.__board[selected_x][selected_y])
+            self.__selected_pawn = (-1, -1)
+            self.update()
+            return
+        if self.__selected_pawn == (x, y):
             self.__selected_pawn = (-1, -1)
             self.update()
             return
@@ -119,16 +137,16 @@ class Game:
     def update_circles(self):
         for row in range(self.__n):
             for column in range(self.__n):
-                selected = "red" if self.__selected_pawn[0] == row and self.__selected_pawn[1] == column else "white"
+                selected = "black" if self.__selected_pawn[0] == row and self.__selected_pawn[1] == column else "white"
                 self.__canvas.itemconfig(self.__grid[row][column], fill=self.get_color_at(row, column),
                                          outline=selected)
 
     def get_current_player(self):
         return "aa"
 
-    def move(self, old_x, old_y, new_x, new_y):
+    def move(self, old_x, old_y, new_x, new_y, type):
         self.__board[old_x][old_y] = 0
-        self.__board[new_x][new_y] = 1
+        self.__board[new_x][new_y] = type
 
     def update_labels(self):
         self.__current_player_text.set(self.get_current_player())
