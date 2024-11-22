@@ -32,7 +32,7 @@ class Game:
         self.__columns = n
         self.__root = Tk()
         self.__root.title("Game")
-        self.__running = False
+        self.__running = True
         self.__pixel_size = pixel_size
 
         self.__frame1 = Frame(self.__root)
@@ -109,6 +109,8 @@ class Game:
         return board
 
     def on_click(self, event):
+        if not self.__running:
+            return
         x = event.x // self.__pixel_size
         y = event.y // self.__pixel_size
         if y >= self.__pixel_size:
@@ -147,6 +149,14 @@ class Game:
             self.move(selected_x, selected_y, x, y, self.__board[selected_x][selected_y])
             self.__selected_pawn = (-1, -1)
             self.invert_player()
+
+            if self.has_lost():
+                self.invert_player()
+                print("Victoire du joueur", (self.__current_player_index + 1))
+                self.update()
+                self.__running = False
+                return
+
             self.update()
             return
         if self.__selected_pawn == (x, y):
@@ -158,7 +168,6 @@ class Game:
         self.__selected_pawn = (x, y)
 
         self.update_circles()
-        # game cycle
 
     def update(self):
         self.update_circles()
@@ -170,6 +179,13 @@ class Game:
                 selected = "black" if self.__selected_pawn[0] == row and self.__selected_pawn[1] == column else "white"
                 self.__canvas.itemconfig(self.__grid[row][column], fill=self.get_color_at(row, column),
                                          outline=selected)
+
+    def has_lost(self):
+        player = self.__current_player[self.__current_player_index]
+        if player.get_pieces() <= 2:
+            return True
+        return False
+
 
     def get_current_player(self):
         return self.__current_player_index
