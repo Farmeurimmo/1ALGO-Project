@@ -10,6 +10,9 @@ class Player:
     def decrease_pieces(self):
         self.__n -= 1
 
+    def get_pieces(self):
+        return self.__n
+
     def get_queen_coordinates(self):
         return self.__queen_x, self.__queen_y
 
@@ -184,9 +187,25 @@ class Game:
     def is_pawn_a_tower(self, x, y):
         return self.__board[x][y] == 1 or self.__board[x][y] == 3
 
+    def decrease_other_player_pawn_count(self):
+        self.__current_player[self.__current_player_index - 1].decrease_pieces()
+
     def move(self, old_x, old_y, new_x, new_y, type):
         self.__board[old_x][old_y] = 0
         self.__board[new_x][new_y] = type
+        player = self.__current_player[self.__current_player_index]
+        if player is not None:
+            queen_x, queen_y = player.get_queen_coordinates()
+            if queen_x == old_x and queen_y == old_y:
+                player.set_queen_coordinates(new_x, new_y)
+            else:
+                min_x, min_y, max_x, max_y = min(queen_x, new_x), min(queen_y, new_y), max(queen_x, new_x), max(queen_y,
+                                                                                                                new_y)
+                for row in range(min_x, max_x + 1):
+                    for column in range(min_y, max_y + 1):
+                        if not self.is_player(row, column) and self.__board[row][column] != 0:
+                            self.__board[row][column] = 0
+                            self.decrease_other_player_pawn_count()
 
     def update_labels(self):
         self.__current_player_text.set(f"Player {self.get_current_player() + 1}")
