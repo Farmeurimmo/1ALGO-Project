@@ -10,6 +10,9 @@ class Player:
     def decrease_pieces(self):
         self.__n -= 1
 
+    def increase_pieces(self):
+        self.__n += 1
+
     def get_pieces(self):
         return self.__n
 
@@ -47,8 +50,8 @@ class Game:
 
         self.__n = n
         self.__current_player = []
-        self.__board = self.init_board()
         self.__current_player_index = 0
+        self.__board = self.init_board()
         self.__selected_pawn = (-1, -1)
 
         self.__grid = []
@@ -89,6 +92,8 @@ class Game:
 
     def init_board(self):
         board = []
+        player_1 = Player(0, self.__n - 1, 0)
+        player_2 = Player(self.__n - 1, 0, 0)
         for i in range(self.__n):
             row = []
             for j in range(self.__n):
@@ -98,14 +103,16 @@ class Game:
         for i in range(self.__n // 2):
             for j in range(self.__n // 2, self.__n):
                 board[i][j] = 1
+                player_1.increase_pieces()
         board[0][self.__n - 1] = 2
 
         for i in range(self.__n // 2, self.__n):
             for j in range(self.__n // 2):
                 board[i][j] = 3
+                player_2.increase_pieces()
         board[self.__n - 1][0] = 4
 
-        self.__current_player = [Player(0, self.__n - 1, self.__n), Player(self.__n - 1, 0, self.__n)]
+        self.__current_player = [player_1, player_2]
         return board
 
     def on_click(self, event):
@@ -186,7 +193,6 @@ class Game:
             return True
         return False
 
-
     def get_current_player(self):
         return self.__current_player_index
 
@@ -227,4 +233,4 @@ class Game:
         self.__current_player_text.set(f"Player {self.get_current_player() + 1}")
 
 
-game = Game(8, 60)
+game = Game(5, 60)
