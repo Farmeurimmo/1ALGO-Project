@@ -252,10 +252,9 @@ class Game:
         if abs(x - selected_x) == abs(y - selected_y):
             x_step = 1 if x > selected_x else -1
             y_step = 1 if y > selected_y else -1
-            for i in range(1, abs(x - selected_x)):
+            for i in range(1, abs(x - selected_x) + 1):
                 if self.__board[selected_x + i * x_step][selected_y + i * y_step] != 0:
                     return False
-            print("passed")
             return True
 
         if selected_x == x or selected_y == y:
@@ -319,7 +318,8 @@ class Game:
                 self.__canvas.itemconfig(self.__grid[row][column], fill=self.get_color_at(row, column),
                                          outline=selected)
                 if selected == "white" and self.__toggled_blows:
-                    for dr, dc in (self.__directions if not self.is_pawn_a_tower(row, column) else self.__directions_pawns):
+                    for dr, dc in (
+                    self.__directions if not self.is_pawn_a_tower(row, column) else self.__directions_pawns):
                         new_row = row + dr
                         new_col = column + dc
 
