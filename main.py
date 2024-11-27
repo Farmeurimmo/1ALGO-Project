@@ -225,23 +225,15 @@ class Game:
     def can_move(self, selected_x, selected_y, x, y):
         def is_clear_path(x1, y1, x2, y2):
             if x1 == x2:
-                if y1 < y2:
-                    for i in range(y1 + 1, y2 + 1):
-                        if self.__board[x1][i] != 0:
-                            return False
-                else:
-                    for i in range(y1 - 1, y2 - 1, -1):
-                        if self.__board[x1][i] != 0:
-                            return False
+                step = 1 if y1 < y2 else -1
+                for i in range(y1 + step, y2 + step, step):
+                    if self.__board[x1][i] != 0:
+                        return False
             elif y1 == y2:
-                if x1 < x2:
-                    for i in range(x1 + 1, x2 + 1):
-                        if self.__board[i][y1] != 0:
-                            return False
-                else:
-                    for i in range(x1 - 1, x2 - 1, -1):
-                        if self.__board[i][y1] != 0:
-                            return False
+                step = 1 if x1 < x2 else -1
+                for i in range(x1 + step, x2 + step, step):
+                    if self.__board[i][y1] != 0:
+                        return False
             return True
 
         if self.is_pawn_a_tower(selected_x, selected_y):
@@ -319,7 +311,7 @@ class Game:
                                          outline=selected)
                 if selected == "white" and self.__toggled_blows:
                     for dr, dc in (
-                    self.__directions if not self.is_pawn_a_tower(row, column) else self.__directions_pawns):
+                            self.__directions if not self.is_pawn_a_tower(row, column) else self.__directions_pawns):
                         new_row = row + dr
                         new_col = column + dc
 
