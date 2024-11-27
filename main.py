@@ -170,7 +170,6 @@ class Game:
             if self.__selected_pawn == (-1, -1):
                 return
             selected_x, selected_y = self.__selected_pawn
-            print("select x", selected_x, "selected y", y)
             if self.is_pawn_a_tower(selected_x, selected_y):
                 if not (selected_x == x or selected_y == y):
                     return
@@ -185,11 +184,10 @@ class Game:
             else:
                 if not abs(x - selected_x) == abs(y - selected_y):
                     return
-                x_step = 1 if x > selected_x else -1
-                y_step = 1 if y > selected_y else -1
+                x_step = 1 if x < selected_x else -1
+                y_step = 1 if y < selected_y else -1
 
                 for i in range(1, abs(x - selected_x)):
-                    print("x", x + i * x_step, "y", y + i * y_step)
                     if self.__board[x + i * x_step][y + i * y_step] != 0:
                         return
 
@@ -202,7 +200,7 @@ class Game:
                 print("Victoire du joueur", (self.__current_player_index + 1))
                 self.update()
                 self.__running = False
-                messagebox.showinfo("Victoire", "Victoire de " + str(self.get_current_player() + 1))
+                messagebox.showinfo("Victoire", "Victoire du joueur " + str(self.get_current_player() + 1))
                 return
 
             self.update()
@@ -214,7 +212,6 @@ class Game:
         if not self.is_player(x, y):
             return
         self.__selected_pawn = (x, y)
-        print("clicked on x", x, "y", y)
 
         self.update_circles()
 
@@ -275,7 +272,7 @@ class Game:
                             self.decrease_other_player_pawn_count()
 
     def update_labels(self):
-        self.__current_player_text_content.set(f"Player {self.get_current_player() + 1}")
+        self.__current_player_text_content.set(f"Joueur {self.get_current_player() + 1}")
 
 
 game = Game()
