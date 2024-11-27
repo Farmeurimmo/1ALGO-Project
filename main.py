@@ -53,15 +53,23 @@ class Game:
         self.__game_frame = Frame(self.__root)
         self.__canvas = Canvas(self.__game_frame)
 
-        self.__current_player_text_content = StringVar()
-        self.__current_player_text = Label(self.__game_frame, textvariable=self.__current_player_text_content,
-                                           fg="black")
-        self.__current_player_text.pack(padx=20, pady=20)
+        self.__button_home = Button(self.__game_frame, text='Quitter la partie',
+                                    command=self.stop)
+        self.__button_home.pack(padx=10, pady=5)
+
+        self.__button_save_game = Button(self.__game_frame, text='Sauvegarder la partie',
+                                         command=self.save_game)
+        self.__button_save_game.pack(padx=10, pady=5)
 
         self.__button_display_blows = Button(self.__game_frame, text='Afficher le(s) pion(s) déplaceable(s)',
                                              command=self.toggle_blows,
                                              bg="red")
-        self.__button_display_blows.pack(padx=20, pady=20)
+        self.__button_display_blows.pack(padx=10, pady=5)
+
+        self.__current_player_text_content = StringVar()
+        self.__current_player_text = Label(self.__game_frame, textvariable=self.__current_player_text_content,
+                                           fg="black")
+        self.__current_player_text.pack(padx=10, pady=10)
 
         self.__canvas.bind('<Button-1>', self.on_click)
 
@@ -76,19 +84,52 @@ class Game:
         self.__button_start = Button(self.__menu_frame, text='Démarrer la partie', command=self.start)
         self.__button_start.pack()
 
+        self.__button_start = Button(self.__menu_frame, text='Charger la dernière partie sauvegardée',
+                                     command=self.start_game_from_file)
+        self.__button_start.pack()
+
         self.toggle_game_display(False)
 
         self.update()
         self.__root.mainloop()
 
-    def start(self):
+    def save_game(self):
+        with open('game', 'w'):  # Permet de vider le fichier
+            pass
+
+        with open("game", "w") as file:
+            for row in self.__board:
+                for col in row:
+                    file.write(str(col))
+                file.write("\n")
+
+        messagebox.showinfo("Sauvegarde réussi",
+                            "La partie a été sauvegardée et pourra être rechargée via le bouton à l'accueil.")
+
+    def start_game_from_file(self):
+        self.__board = []
+        with open("game", "r") as file:
+            for line in file:
+                temp_list = []
+                for char in line:
+                    if char == '\n':
+                        continue
+                    temp_list.append(int(char))
+                self.__board.append(temp_list)
+
+        self.__n = len(self.__board)
+        self.start(False)
+
+    def start(self, generate_board=True):
         self.__w = self.__n * self.__pixel_size + 1  # car sinon outline ne fonctionne pas sur les case à droites
         self.__h = self.__n * self.__pixel_size + 1  # pareil mais pour les cases en bas
 
         self.__canvas.config(width=self.__w, height=self.__h, highlightthickness=0, bd=0, bg="white")
         self.__canvas.pack(padx=Game.CANVA_PADDING_X, pady=Game.CANVA_PADDING_Y)
 
-        self.__board = self.init_board()
+        if generate_board:
+            self.__board = self.init_board()
+
         for i in range(self.__n):
             row = []
             for j in range(self.__n):
@@ -321,7 +362,6 @@ class Game:
                             continue
 
                         if self.is_player(row, column) and self.can_move(row, column, new_row, new_col):
-                            print(row, column, new_row, new_col)
                             self.__canvas.itemconfig(self.__grid[row][column], outline="lime")
                             break
 
