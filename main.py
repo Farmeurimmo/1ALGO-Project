@@ -34,8 +34,12 @@ class Game:
         self.__h = 0
         self.__root = Tk()
         self.__root.title("Game")
+        self.__root.config(padx=self.CANVA_PADDING_X * 4, pady=self.CANVA_PADDING_Y * 4)
         self.__running = False
         self.__pixel_size = pixel_size
+
+        self.__directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
+        self.__directions_pawns = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
         self.__n = 8
         self.__current_player = []
@@ -43,6 +47,7 @@ class Game:
         self.__selected_pawn = (-1, -1)
         self.__board = []
         self.__grid = []
+        self.__toggled_blows = False
 
         # Frame du jeux
         self.__game_frame = Frame(self.__root)
@@ -53,12 +58,17 @@ class Game:
                                            fg="black")
         self.__current_player_text.pack(padx=20, pady=20)
 
+        self.__button_display_blows = Button(self.__game_frame, text='Afficher le(s) pion(s) déplaceable(s)',
+                                             command=self.toggle_blows,
+                                             bg="red")
+        self.__button_display_blows.pack(padx=20, pady=20)
+
         self.__canvas.bind('<Button-1>', self.on_click)
 
         # Frame menu d'attente
         self.__menu_frame = Frame(self.__root)
-        self.__scale = Scale(self.__menu_frame, orient='horizontal', from_=6, to=12, length=200,
-                             label='Dimension du plateau',
+        self.__scale = Scale(self.__menu_frame, orient='horizontal', from_=6, to=12, length=130,
+                             label='Dimension du plateau', resolution=2, tickinterval=6,
                              showvalue=True, width=10, command=self.zoom)
         self.__scale.set(self.__n)
         self.__scale.pack()
@@ -102,6 +112,20 @@ class Game:
         self.toggle_game_display(True)
         self.update()
 
+    def toggle_blows(self):
+        if self.__toggled_blows:
+            self.__button_display_blows.config(bg="red")
+        else:
+            self.__button_display_blows.config(bg="green")
+        self.__toggled_blows = not self.__toggled_blows
+        self.update_circles()
+
+    def stop(self):
+        self.__running = False
+        self.toggle_game_display(False)
+        self.__board = []
+        self.__grid = []
+
     def zoom(self, event):
         self.__n = self.__scale.get()
         self.update()
@@ -121,7 +145,7 @@ class Game:
         if self.__board[x][y] == 1:
             return "blue"
         if self.__board[x][y] == 2:
-            return "pink"
+            return "purple"
         if self.__board[x][y] == 3:
             return "red"
         if self.__board[x][y] == 4:
@@ -170,26 +194,9 @@ class Game:
             if self.__selected_pawn == (-1, -1):
                 return
             selected_x, selected_y = self.__selected_pawn
-            if self.is_pawn_a_tower(selected_x, selected_y):
-                if not (selected_x == x or selected_y == y):
-                    return
-                if selected_x == x:
-                    for i in range(min(y, selected_y) + 1, max(y, selected_y)):
-                        if self.__board[x][i] != 0:
-                            return
-                else:
-                    for i in range(min(x, selected_x) + 1, max(x, selected_x)):
-                        if self.__board[i][y] != 0:
-                            return
-            else:
-                if not abs(x - selected_x) == abs(y - selected_y):
-                    return
-                x_step = 1 if x < selected_x else -1
-                y_step = 1 if y < selected_y else -1
 
-                for i in range(1, abs(x - selected_x)):
-                    if self.__board[x + i * x_step][y + i * y_step] != 0:
-                        return
+            if not self.can_move(selected_x, selected_y, x, y):
+                return
 
             self.move(selected_x, selected_y, x, y, self.__board[selected_x][selected_y])
             self.__selected_pawn = (-1, -1)
@@ -199,8 +206,8 @@ class Game:
                 self.invert_player()
                 print("Victoire du joueur", (self.__current_player_index + 1))
                 self.update()
-                self.__running = False
                 messagebox.showinfo("Victoire", "Victoire du joueur " + str(self.get_current_player() + 1))
+                self.stop()
                 return
 
             self.update()
@@ -215,17 +222,51 @@ class Game:
 
         self.update_circles()
 
+    def can_move(self, selected_x, selected_y, x, y):
+        def is_clear_path(x1, y1, x2, y2):
+            if x1 == x2:
+                if y1 < y2:
+                    for i in range(y1 + 1, y2 + 1):
+                        if self.__board[x1][i] != 0:
+                            return False
+                else:
+                    for i in range(y1 - 1, y2 - 1, -1):
+                        if self.__board[x1][i] != 0:
+                            return False
+            elif y1 == y2:
+                if x1 < x2:
+                    for i in range(x1 + 1, x2 + 1):
+                        if self.__board[i][y1] != 0:
+                            return False
+                else:
+                    for i in range(x1 - 1, x2 - 1, -1):
+                        if self.__board[i][y1] != 0:
+                            return False
+            return True
+
+        if self.is_pawn_a_tower(selected_x, selected_y):
+            if selected_x != x and selected_y != y:
+                return False
+            return is_clear_path(selected_x, selected_y, x, y)
+
+        if abs(x - selected_x) == abs(y - selected_y):
+            x_step = 1 if x > selected_x else -1
+            y_step = 1 if y > selected_y else -1
+            for i in range(1, abs(x - selected_x)):
+                if self.__board[selected_x + i * x_step][selected_y + i * y_step] != 0:
+                    return False
+            print("passed")
+            return True
+
+        if selected_x == x or selected_y == y:
+            return is_clear_path(selected_x, selected_y, x, y)
+
+        return False
+
     def update(self):
         if self.__running:
             self.update_circles()
         self.update_labels()
-
-    def update_circles(self):
-        for row in range(self.__n):
-            for column in range(self.__n):
-                selected = "black" if self.__selected_pawn[0] == row and self.__selected_pawn[1] == column else "white"
-                self.__canvas.itemconfig(self.__grid[row][column], fill=self.get_color_at(row, column),
-                                         outline=selected)
 
     def has_lost(self):
         player = self.__current_player[self.__current_player_index]
@@ -270,6 +311,27 @@ class Game:
                                 return
                             self.__board[row][column] = 0
                             self.decrease_other_player_pawn_count()
+
+    def update_circles(self):
+        for row in range(self.__n):
+            for column in range(self.__n):
+                selected = "black" if self.__selected_pawn[0] == row and self.__selected_pawn[1] == column else "white"
+                self.__canvas.itemconfig(self.__grid[row][column], fill=self.get_color_at(row, column),
+                                         outline=selected)
+                if selected == "white" and self.__toggled_blows:
+                    for dr, dc in (self.__directions if not self.is_pawn_a_tower(row, column) else self.__directions_pawns):
+                        new_row = row + dr
+                        new_col = column + dc
+
+                        if new_row >= self.__n or new_row < 0:
+                            continue
+                        if new_col >= self.__n or new_col < 0:
+                            continue
+
+                        if self.is_player(row, column) and self.can_move(row, column, new_row, new_col):
+                            print(row, column, new_row, new_col)
+                            self.__canvas.itemconfig(self.__grid[row][column], outline="lime")
+                            break
 
     def update_labels(self):
         self.__current_player_text_content.set(f"Joueur {self.get_current_player() + 1}")
