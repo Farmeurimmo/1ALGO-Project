@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import messagebox
 
 
 class Player:
@@ -28,54 +29,91 @@ class Game:
     CANVA_PADDING_X = 10
     CANVA_PADDING_Y = 10
 
-    def __init__(self, n, pixel_size):
-        self.__w = n * pixel_size + 1  # car sinon outline ne fonctionne pas sur les case à droites
-        self.__h = n * pixel_size + 1  # pareil mais pour les cases en bas
-        self.__rows = 1
-        self.__columns = n
+    def __init__(self, pixel_size=60):
+        self.__w = 0
+        self.__h = 0
         self.__root = Tk()
         self.__root.title("Game")
-        self.__running = True
+        self.__running = False
         self.__pixel_size = pixel_size
 
-        self.__frame1 = Frame(self.__root)
-        self.__frame1.grid(row=0, column=0, rowspan=4)
-        self.__canvas = Canvas(self.__frame1)
+        self.__n = 8
+        self.__current_player = []
+        self.__current_player_index = 0
+        self.__selected_pawn = (-1, -1)
+        self.__board = []
+        self.__grid = []
+
+        # Frame du jeux
+        self.__game_frame = Frame(self.__root)
+        self.__canvas = Canvas(self.__game_frame)
+
+        self.__current_player_text_content = StringVar()
+        self.__current_player_text = Label(self.__game_frame, textvariable=self.__current_player_text_content,
+                                           fg="black")
+        self.__current_player_text.pack(padx=20, pady=20)
+
+        self.__canvas.bind('<Button-1>', self.on_click)
+
+        # Frame menu d'attente
+        self.__menu_frame = Frame(self.__root)
+        self.__scale = Scale(self.__menu_frame, orient='horizontal', from_=6, to=12, length=200,
+                             label='Dimension du plateau',
+                             showvalue=True, width=10, command=self.zoom)
+        self.__scale.set(self.__n)
+        self.__scale.pack()
+
+        self.__button_start = Button(self.__menu_frame, text='Démarrer la partie', command=self.start)
+        self.__button_start.pack()
+
+        self.toggle_game_display(False)
+
+        self.update()
+        self.__root.mainloop()
+
+    def start(self):
+        self.__w = self.__n * self.__pixel_size + 1  # car sinon outline ne fonctionne pas sur les case à droites
+        self.__h = self.__n * self.__pixel_size + 1  # pareil mais pour les cases en bas
+
         self.__canvas.config(width=self.__w, height=self.__h, highlightthickness=0, bd=0, bg="white")
         self.__canvas.pack(padx=Game.CANVA_PADDING_X, pady=Game.CANVA_PADDING_Y)
 
-        self.__current_player_text = StringVar()
-        self.__text1 = Label(self.__frame1, textvariable=self.__current_player_text, fg="black")
-        self.__text1.pack(padx=20, pady=20)
-
-        self.__n = n
-        self.__current_player = []
-        self.__current_player_index = 0
         self.__board = self.init_board()
-        self.__selected_pawn = (-1, -1)
-
-        self.__grid = []
-
         for i in range(self.__n):
             row = []
             for j in range(self.__n):
                 self.__canvas.create_rectangle(
-                    i * pixel_size, j * pixel_size, (i + 1) * pixel_size, (j + 1) * pixel_size, outline="black"
+                    i * self.__pixel_size, j * self.__pixel_size, (i + 1) * self.__pixel_size,
+                    (j + 1) * self.__pixel_size, outline="black"
                 )
-                circle_parent = self.__canvas.create_oval(i * pixel_size + 4, j * pixel_size + 4,
-                                                          (i + 1) * pixel_size - 4, (j + 1) * pixel_size - 4,
+                circle_parent = self.__canvas.create_oval(i * self.__pixel_size + 4, j * self.__pixel_size + 4,
+                                                          (i + 1) * self.__pixel_size - 4,
+                                                          (j + 1) * self.__pixel_size - 4,
                                                           outline="black",
                                                           width=4)
-                self.__canvas.create_oval(i * pixel_size + 6, j * pixel_size + 6,
-                                          (i + 1) * pixel_size - 6, (j + 1) * pixel_size - 6, outline="white",
+                self.__canvas.create_oval(i * self.__pixel_size + 6, j * self.__pixel_size + 6,
+                                          (i + 1) * self.__pixel_size - 6, (j + 1) * self.__pixel_size - 6,
+                                          outline="white",
                                           width=2)
                 row.append(circle_parent)
             self.__grid.append(row)
 
-        self.__canvas.bind('<Button-1>', self.on_click)
-
+        self.__running = True
+        self.toggle_game_display(True)
         self.update()
-        self.__root.mainloop()
+
+    def zoom(self, event):
+        self.__n = self.__scale.get()
+        self.update()
+
+    def toggle_game_display(self, state):
+        if state:
+            self.__game_frame.grid(row=0, column=0, rowspan=4)
+            self.__menu_frame.grid_forget()
+        else:
+            self.__game_frame.grid_forget()
+            self.__menu_frame.grid(row=0, column=0, rowspan=4)
+            # show menu
 
     def get_color_at(self, x, y):
         if self.__board[x][y] == 0:
@@ -122,7 +160,7 @@ class Game:
         y = event.y // self.__pixel_size
         if y >= self.__pixel_size:
             return
-        if x >= self.__pixel_size * self.__columns:
+        if x >= self.__pixel_size * self.__n:
             return
         if x < 0:
             return
@@ -132,6 +170,7 @@ class Game:
             if self.__selected_pawn == (-1, -1):
                 return
             selected_x, selected_y = self.__selected_pawn
+            print("select x", selected_x, "selected y", y)
             if self.is_pawn_a_tower(selected_x, selected_y):
                 if not (selected_x == x or selected_y == y):
                     return
@@ -150,6 +189,7 @@ class Game:
                 y_step = 1 if y > selected_y else -1
 
                 for i in range(1, abs(x - selected_x)):
+                    print("x", x + i * x_step, "y", y + i * y_step)
                     if self.__board[x + i * x_step][y + i * y_step] != 0:
                         return
 
@@ -162,6 +202,7 @@ class Game:
                 print("Victoire du joueur", (self.__current_player_index + 1))
                 self.update()
                 self.__running = False
+                messagebox.showinfo("Victoire", "Victoire de " + str(self.get_current_player() + 1))
                 return
 
             self.update()
@@ -173,11 +214,13 @@ class Game:
         if not self.is_player(x, y):
             return
         self.__selected_pawn = (x, y)
+        print("clicked on x", x, "y", y)
 
         self.update_circles()
 
     def update(self):
-        self.update_circles()
+        if self.__running:
+            self.update_circles()
         self.update_labels()
 
     def update_circles(self):
@@ -226,11 +269,13 @@ class Game:
                 for row in range(min_x, max_x + 1):
                     for column in range(min_y, max_y + 1):
                         if not self.is_player(row, column) and self.__board[row][column] != 0:
+                            if self.__board[row][column] == 2 or self.__board[row][column] == 4:  # Si c'est une reine
+                                return
                             self.__board[row][column] = 0
                             self.decrease_other_player_pawn_count()
 
     def update_labels(self):
-        self.__current_player_text.set(f"Player {self.get_current_player() + 1}")
+        self.__current_player_text_content.set(f"Player {self.get_current_player() + 1}")
 
 
-game = Game(5, 60)
+game = Game()
