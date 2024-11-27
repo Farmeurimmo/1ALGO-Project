@@ -307,7 +307,7 @@ class Game:
                     for column in range(min_y, max_y + 1):
                         if not self.is_player(row, column) and self.__board[row][column] != 0:
                             if self.__board[row][column] == 2 or self.__board[row][column] == 4:  # Si c'est une reine
-                                return
+                                continue
                             self.__board[row][column] = 0
                             self.decrease_other_player_pawn_count()
 
