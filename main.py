@@ -156,6 +156,9 @@ class Game:
             for row in range(self.__n):
                 for col in range(self.__n):
                     if self.is_player(row, col):
+                        if self.is_player_queen(row, col):
+                            self.__current_player[player].set_queen_coordinates(row, col)
+                            continue
                         self.__current_player[player].increase_pieces()
         self.__current_player_index = 0
 
@@ -326,6 +329,13 @@ class Game:
             return self.__board[x][y] == 1 or self.__board[x][y] == 2
         if self.__current_player_index == 1:
             return self.__board[x][y] == 3 or self.__board[x][y] == 4
+        return False
+
+    def is_player_queen(self, x, y):
+        if self.__current_player_index == 0:
+            return self.__board[x][y] == 2
+        if self.__current_player_index == 1:
+            return self.__board[x][y] == 4
         return False
 
     def invert_player(self):
