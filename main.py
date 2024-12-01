@@ -1,3 +1,4 @@
+from random import randint
 from tkinter import *
 from tkinter import messagebox
 
@@ -48,6 +49,7 @@ class Game:
         self.__board = []
         self.__grid = []
         self.__toggled_blows = False
+        self.__against_bot = True
 
         # Frame du jeux
         self.__game_frame = Frame(self.__root)
@@ -65,6 +67,11 @@ class Game:
                                              command=self.toggle_blows,
                                              bg="red")
         self.__button_display_blows.pack(padx=10, pady=5)
+
+        self.__button_against_bot = Button(self.__game_frame, text='Jouer contre un robot (aléatoire)',
+                                           command=self.toggle_against_bot,
+                                           bg="red")
+        self.__button_against_bot.pack(padx=10, pady=5)
 
         self.__current_player_text_content = StringVar()
         self.__current_player_text = Label(self.__game_frame, textvariable=self.__current_player_text_content,
@@ -88,6 +95,7 @@ class Game:
                                      command=self.start_game_from_file)
         self.__button_start.pack()
 
+        self.toggle_against_bot()
         self.toggle_game_display(False)
 
         self.update()
@@ -127,10 +135,9 @@ class Game:
         self.__canvas.config(width=self.__w, height=self.__h, highlightthickness=0, bd=0, bg="white")
         self.__canvas.pack(padx=Game.CANVA_PADDING_X, pady=Game.CANVA_PADDING_Y)
 
+        self.__current_player = self.create_players()
         if generate_board:
             self.__board = self.init_board()
-        else:
-            self.__current_player = self.create_players()
 
         for i in range(self.__n):
             row = []
@@ -162,6 +169,8 @@ class Game:
                         self.__current_player[player].increase_pieces()
         self.__current_player_index = 0
 
+        self.__against_bot = True
+        self.toggle_against_bot()
         self.__running = True
         self.toggle_game_display(True)
         self.update()
@@ -173,6 +182,44 @@ class Game:
             self.__button_display_blows.config(bg="green")
         self.__toggled_blows = not self.__toggled_blows
         self.update_circles()
+
+    def bot_move(self):
+        if self.get_current_player() != 1:
+            return
+        can_be_took = []
+        for pawn_row in range(self.__n):
+            for pawn_col in range(self.__n):
+                if not self.is_player(pawn_row, pawn_col):
+                    continue
+                for try_row in range(self.__n):
+                    for try_col in range(self.__n):
+                        if pawn_row == try_row and pawn_col == try_col:
+                            continue
+                        if self.can_move(pawn_row, pawn_col, try_row, try_col):
+                            can_be_took.append((pawn_row, pawn_col, try_row, try_col))
+
+        took = can_be_took[randint(0, len(can_be_took) - 1)]
+
+        self.move(took[0], took[1], took[2], took[3], self.__board[took[0]][took[1]])
+
+        print(self.__current_player[1].get_pieces())
+        print(self.__current_player[0].get_pieces())
+
+        if self.should_end():
+            return
+
+        self.invert_player()
+
+        self.update()
+
+    def toggle_against_bot(self):
+        if self.__against_bot:
+            self.__button_against_bot.config(bg="red")
+        else:
+            self.__button_against_bot.config(bg="green")
+            if self.get_current_player() == 1:
+                self.bot_move()
+        self.__against_bot = not self.__against_bot
 
     def stop(self):
         self.__running = False
@@ -211,7 +258,6 @@ class Game:
 
     def init_board(self):
         board = []
-        player_1, player_2 = self.create_players()
         for i in range(self.__n):
             row = []
             for j in range(self.__n):
@@ -221,16 +267,14 @@ class Game:
         for i in range(self.__n // 2):
             for j in range(self.__n // 2, self.__n):
                 board[i][j] = 1
-                player_1.increase_pieces()
         board[0][self.__n - 1] = 2
 
         for i in range(self.__n // 2, self.__n):
             for j in range(self.__n // 2):
                 board[i][j] = 3
-                player_2.increase_pieces()
+
         board[self.__n - 1][0] = 4
 
-        self.__current_player = [player_1, player_2]
         return board
 
     def on_click(self, event):
@@ -258,15 +302,12 @@ class Game:
             self.__selected_pawn = (-1, -1)
             self.invert_player()
 
-            if self.has_lost():
-                self.invert_player()
-                print("Victoire du joueur", (self.__current_player_index + 1))
-                self.update()
-                messagebox.showinfo("Victoire", "Victoire du joueur " + str(self.get_current_player() + 1))
-                self.stop()
+            if self.should_end():
                 return
 
             self.update()
+            if self.__against_bot:
+                self.bot_move()
             return
         if self.__selected_pawn == (x, y):
             self.__selected_pawn = (-1, -1)
@@ -277,6 +318,16 @@ class Game:
         self.__selected_pawn = (x, y)
 
         self.update_circles()
+
+    def should_end(self):
+        if self.has_lost():
+            self.invert_player()
+            print("Victoire du joueur", (self.__current_player_index + 1))
+            self.update()
+            messagebox.showinfo("Victoire", "Victoire du joueur " + str(self.get_current_player() + 1))
+            self.stop()
+            return True
+        return False
 
     def can_move(self, selected_x, selected_y, x, y):
         def is_clear_path(x1, y1, x2, y2):
@@ -317,7 +368,8 @@ class Game:
 
     def has_lost(self):
         player = self.__current_player[self.__current_player_index]
-        if player.get_pieces() <= 2:
+        print("current", player.get_pieces())
+        if player.get_pieces() < 2:
             return True
         return False
 
