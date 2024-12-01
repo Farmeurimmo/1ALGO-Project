@@ -129,6 +129,8 @@ class Game:
 
         if generate_board:
             self.__board = self.init_board()
+        else:
+            self.__current_player = self.create_players()
 
         for i in range(self.__n):
             row = []
@@ -148,6 +150,14 @@ class Game:
                                           width=2)
                 row.append(circle_parent)
             self.__grid.append(row)
+
+        for player in range(2):
+            self.__current_player_index = player
+            for row in range(self.__n):
+                for col in range(self.__n):
+                    if self.is_player(row, col):
+                        self.__current_player[player].increase_pieces()
+        self.__current_player_index = 0
 
         self.__running = True
         self.toggle_game_display(True)
@@ -170,6 +180,9 @@ class Game:
     def zoom(self, event):
         self.__n = self.__scale.get()
         self.update()
+
+    def create_players(self):
+        return Player(0, self.__n - 1, 0), Player(self.__n - 1, 0, 0)
 
     def toggle_game_display(self, state):
         if state:
@@ -195,8 +208,7 @@ class Game:
 
     def init_board(self):
         board = []
-        player_1 = Player(0, self.__n - 1, 0)
-        player_2 = Player(self.__n - 1, 0, 0)
+        player_1, player_2 = self.create_players()
         for i in range(self.__n):
             row = []
             for j in range(self.__n):
