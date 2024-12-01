@@ -103,7 +103,7 @@ class Game:
                     file.write(str(col))
                 file.write("\n")
 
-        messagebox.showinfo("Sauvegarde réussi",
+        messagebox.showinfo("Sauvegarde réussie",
                             "La partie a été sauvegardée et pourra être rechargée via le bouton à l'accueil.")
 
     def start_game_from_file(self):
