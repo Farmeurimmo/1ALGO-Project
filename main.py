@@ -202,9 +202,6 @@ class Game:
 
         self.move(took[0], took[1], took[2], took[3], self.__board[took[0]][took[1]])
 
-        print(self.__current_player[1].get_pieces())
-        print(self.__current_player[0].get_pieces())
-
         if self.should_end():
             return
 
@@ -368,7 +365,6 @@ class Game:
 
     def has_lost(self):
         player = self.__current_player[self.__current_player_index]
-        print("current", player.get_pieces())
         if player.get_pieces() < 2:
             return True
         return False
