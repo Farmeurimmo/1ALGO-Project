@@ -49,6 +49,7 @@ class Game:
         self.__board = []
         self.__grid = []
         self.__toggled_blows = False
+        self.__toggled_playable = False
         self.__against_bot = True
 
         # Frame du jeux
@@ -63,7 +64,12 @@ class Game:
                                          command=self.save_game)
         self.__button_save_game.pack(padx=10, pady=5)
 
-        self.__button_display_blows = Button(self.__game_frame, text='Afficher le(s) pion(s) déplaceable(s)',
+        self.__button_display_playable = Button(self.__game_frame, text='Afficher le(s) pion(s) jouable(s)',
+                                                command=self.toggle_playable,
+                                                bg="red")
+        self.__button_display_playable.pack(padx=10, pady=5)
+
+        self.__button_display_blows = Button(self.__game_frame, text='Afficher le(s) cases jouables)',
                                              command=self.toggle_blows,
                                              bg="red")
         self.__button_display_blows.pack(padx=10, pady=5)
@@ -175,13 +181,23 @@ class Game:
         self.toggle_game_display(True)
         self.update()
 
-    def toggle_blows(self):
-        if self.__toggled_blows:
-            self.__button_display_blows.config(bg="red")
+    def toggle_playable(self):
+        if self.__toggled_playable:
+            self.__button_display_playable.config(bg="red")
         else:
-            self.__button_display_blows.config(bg="green")
-        self.__toggled_blows = not self.__toggled_blows
+            self.__button_display_playable.config(bg="green")
+        self.__toggled_playable = not self.__toggled_playable
         self.update_circles()
+
+    def get_moves_for_pawn(self, pawn_row, pawn_col):
+        moves = []
+        for try_row in range(self.__n):
+            for try_col in range(self.__n):
+                if pawn_row == try_row and pawn_col == try_col:
+                    continue
+                if self.can_move(pawn_row, pawn_col, try_row, try_col):
+                    moves.append((pawn_row, pawn_col, try_row, try_col))
+        return moves
 
     def bot_move(self):
         if self.get_current_player() != 1:
@@ -191,12 +207,7 @@ class Game:
             for pawn_col in range(self.__n):
                 if not self.is_player(pawn_row, pawn_col):
                     continue
-                for try_row in range(self.__n):
-                    for try_col in range(self.__n):
-                        if pawn_row == try_row and pawn_col == try_col:
-                            continue
-                        if self.can_move(pawn_row, pawn_col, try_row, try_col):
-                            can_be_took.append((pawn_row, pawn_col, try_row, try_col))
+                can_be_took += self.get_moves_for_pawn(pawn_row, pawn_col)
 
         took = can_be_took[randint(0, len(can_be_took) - 1)]
 
@@ -217,6 +228,36 @@ class Game:
             if self.get_current_player() == 1:
                 self.bot_move()
         self.__against_bot = not self.__against_bot
+
+    def toggle_blows(self):
+        if self.__toggled_blows:
+            self.__button_display_blows.config(bg="red")
+        else:
+            self.__button_display_blows.config(bg="green")
+            if self.get_current_player() == 0:
+                self.update_selected_blow()
+        self.__toggled_blows = not self.__toggled_blows
+
+    def update_selected_blow(self):
+        if len(self.__grid) <= 0:
+            return
+        if self.__selected_pawn == (-1, -1):
+            for row in range(self.__n):
+                for col in range(self.__n):
+                    if self.__board[row][col] == 0:
+                        self.__canvas.itemconfig(self.__grid[row][col], fill="white")
+            return
+        moves = self.get_moves_for_pawn(self.__selected_pawn[0], self.__selected_pawn[1])
+        print("moves", len(moves))
+        for row in range(self.__n):
+            for col in range(self.__n):
+                if self.__board[row][col] != 0:
+                    continue
+                for move in moves:
+                    if move[0] == row and move[1] == col:
+                        self.__canvas.itemconfig(self.__grid[row][col], fill="green")
+                    else:
+                        self.__canvas.itemconfig(self.__grid[row][col], fill="white")
 
     def stop(self):
         self.__running = False
@@ -297,6 +338,7 @@ class Game:
 
             self.move(selected_x, selected_y, x, y, self.__board[selected_x][selected_y])
             self.__selected_pawn = (-1, -1)
+            self.update_selected_blow()
             self.invert_player()
 
             if self.should_end():
@@ -308,13 +350,16 @@ class Game:
             return
         if self.__selected_pawn == (x, y):
             self.__selected_pawn = (-1, -1)
+            self.update_selected_blow()
             self.update()
             return
         if not self.is_player(x, y):
             return
         self.__selected_pawn = (x, y)
+        self.update_selected_blow()
 
         self.update_circles()
+        self.update_selected_blow()
 
     def should_end(self):
         if self.has_lost():
@@ -420,7 +465,7 @@ class Game:
                 selected = "black" if self.__selected_pawn[0] == row and self.__selected_pawn[1] == column else "white"
                 self.__canvas.itemconfig(self.__grid[row][column], fill=self.get_color_at(row, column),
                                          outline=selected)
-                if selected == "white" and self.__toggled_blows:
+                if selected == "white" and self.__toggled_playable:
                     for dr, dc in (
                             self.__directions if not self.is_pawn_a_tower(row, column) else self.__directions_pawns):
                         new_row = row + dr
