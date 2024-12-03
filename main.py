@@ -241,23 +241,15 @@ class Game:
     def update_selected_blow(self):
         if len(self.__grid) <= 0:
             return
-        if self.__selected_pawn == (-1, -1):
-            for row in range(self.__n):
-                for col in range(self.__n):
-                    if self.__board[row][col] == 0:
-                        self.__canvas.itemconfig(self.__grid[row][col], fill="white")
-            return
-        moves = self.get_moves_for_pawn(self.__selected_pawn[0], self.__selected_pawn[1])
-        print("moves", len(moves))
         for row in range(self.__n):
             for col in range(self.__n):
-                if self.__board[row][col] != 0:
-                    continue
-                for move in moves:
-                    if move[0] == row and move[1] == col:
-                        self.__canvas.itemconfig(self.__grid[row][col], fill="green")
-                    else:
-                        self.__canvas.itemconfig(self.__grid[row][col], fill="white")
+                if self.__board[row][col] == 0:
+                    self.__canvas.itemconfig(self.__grid[row][col], fill="white")
+        if self.__selected_pawn == (-1, -1):
+            return
+        moves = self.get_moves_for_pawn(self.__selected_pawn[0], self.__selected_pawn[1])
+        for move in moves:
+            self.__canvas.itemconfig(self.__grid[move[2]][move[3]], fill="green")
 
     def stop(self):
         self.__running = False
@@ -356,7 +348,6 @@ class Game:
         if not self.is_player(x, y):
             return
         self.__selected_pawn = (x, y)
-        self.update_selected_blow()
 
         self.update_circles()
         self.update_selected_blow()
