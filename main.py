@@ -88,17 +88,17 @@ class Game:
         self.__canvas.bind('<Button-1>', self.on_click)
 
         # Frame menu d'attente
-        self.__menu_frame = Frame(self.__root)
-        self.__scale = Scale(self.__menu_frame, orient='horizontal', from_=6, to=12, length=130,
+        self.__waiting_frame = Frame(self.__root)
+        self.__scale = Scale(self.__waiting_frame, orient='horizontal', from_=6, to=12, length=130,
                              label='Dimension du plateau', resolution=2, tickinterval=6,
                              showvalue=True, width=10, command=self.zoom)
         self.__scale.set(self.__n)
         self.__scale.pack()
 
-        self.__button_start = Button(self.__menu_frame, text='Démarrer la partie', command=self.start)
+        self.__button_start = Button(self.__waiting_frame, text='Démarrer la partie', command=self.start)
         self.__button_start.pack()
 
-        self.__button_start = Button(self.__menu_frame, text='Charger la dernière partie sauvegardée',
+        self.__button_start = Button(self.__waiting_frame, text='Charger la dernière partie sauvegardée',
                                      command=self.start_game_from_file)
         self.__button_start.pack()
 
@@ -269,11 +269,10 @@ class Game:
     def toggle_game_display(self, state):
         if state:
             self.__game_frame.grid(row=0, column=0, rowspan=4)
-            self.__menu_frame.grid_forget()
+            self.__waiting_frame.grid_forget()
         else:
             self.__game_frame.grid_forget()
-            self.__menu_frame.grid(row=0, column=0, rowspan=4)
-            # show menu
+            self.__waiting_frame.grid(row=0, column=0, rowspan=4)
 
     def get_color_at(self, x, y):
         if self.__board[x][y] == 0:
