@@ -69,7 +69,8 @@ class Game:
                                                 bg="red")
         self.__button_display_playable.pack(padx=10, pady=5)
 
-        self.__button_display_blows = Button(self.__game_frame, text='Afficher le(s) cases jouables)',
+        self.__button_display_blows = Button(self.__game_frame,
+                                             text='Afficher le(s) cases jouable(s) pour le pion séléctionné',
                                              command=self.toggle_blows,
                                              bg="red")
         self.__button_display_blows.pack(padx=10, pady=5)
@@ -182,11 +183,11 @@ class Game:
         self.update()
 
     def toggle_playable(self):
-        if self.__toggled_playable:
+        self.__toggled_playable = not self.__toggled_playable
+        if not self.__toggled_playable:
             self.__button_display_playable.config(bg="red")
         else:
             self.__button_display_playable.config(bg="green")
-        self.__toggled_playable = not self.__toggled_playable
         self.update_circles()
 
     def get_moves_for_pawn(self, pawn_row, pawn_col):
@@ -221,22 +222,21 @@ class Game:
         self.update()
 
     def toggle_against_bot(self):
-        if self.__against_bot:
+        self.__against_bot = not self.__against_bot
+        if not self.__against_bot:
             self.__button_against_bot.config(bg="red")
         else:
             self.__button_against_bot.config(bg="green")
             if self.get_current_player() == 1:
                 self.bot_move()
-        self.__against_bot = not self.__against_bot
 
     def toggle_blows(self):
-        if self.__toggled_blows:
+        self.__toggled_blows = not self.__toggled_blows
+        if not self.__toggled_blows:
             self.__button_display_blows.config(bg="red")
         else:
             self.__button_display_blows.config(bg="green")
-            if self.get_current_player() == 0:
-                self.update_selected_blow()
-        self.__toggled_blows = not self.__toggled_blows
+        self.update_selected_blow()
 
     def update_selected_blow(self):
         if len(self.__grid) <= 0:
@@ -246,6 +246,8 @@ class Game:
                 if self.__board[row][col] == 0:
                     self.__canvas.itemconfig(self.__grid[row][col], fill="white")
         if self.__selected_pawn == (-1, -1):
+            return
+        if not self.__toggled_blows:
             return
         moves = self.get_moves_for_pawn(self.__selected_pawn[0], self.__selected_pawn[1])
         for move in moves:
