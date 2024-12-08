@@ -27,15 +27,12 @@ class Player:
 
 
 class Game:
-    CANVA_PADDING_X = 10
-    CANVA_PADDING_Y = 10
-
     def __init__(self, pixel_size=60):
         self.__w = 0
         self.__h = 0
         self.__root = Tk()
         self.__root.title("Game")
-        self.__root.config(padx=self.CANVA_PADDING_X * 4, pady=self.CANVA_PADDING_Y * 4)
+        self.__root.config(padx=CANVA_PADDING_X * 4, pady=CANVA_PADDING_Y * 4)
         self.__running = False
         self.__pixel_size = pixel_size
 
@@ -140,7 +137,7 @@ class Game:
         self.__h = self.__n * self.__pixel_size + 1  # pareil mais pour les cases en bas
 
         self.__canvas.config(width=self.__w, height=self.__h, highlightthickness=0, bd=0, bg="white")
-        self.__canvas.pack(padx=Game.CANVA_PADDING_X, pady=Game.CANVA_PADDING_Y)
+        self.__canvas.pack(padx=CANVA_PADDING_X, pady=CANVA_PADDING_Y)
 
         self.__current_player = self.create_players()
         if generate_board:
@@ -475,5 +472,8 @@ class Game:
     def update_labels(self):
         self.__current_player_text_content.set(f"Joueur {self.get_current_player() + 1}")
 
+
+CANVA_PADDING_X = 10
+CANVA_PADDING_Y = 10
 
 game = Game()
