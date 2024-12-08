@@ -4,19 +4,19 @@ from tkinter import messagebox
 
 
 class Player:
-    def __init__(self, queen_x, queen_y, n):
+    def __init__(self, queen_x, queen_y, pawns):
         self.__queen_x = queen_x
         self.__queen_y = queen_y
-        self.__n = n
+        self.__pawns_count = pawns
 
-    def decrease_pieces(self):
-        self.__n -= 1
+    def decrease_pawns(self):
+        self.__pawns_count -= 1
 
-    def increase_pieces(self):
-        self.__n += 1
+    def increase_pawns(self):
+        self.__pawns_count += 1
 
-    def get_pieces(self):
-        return self.__n
+    def get_pawns(self):
+        return self.__pawns_count
 
     def get_queen_coordinates(self):
         return self.__queen_x, self.__queen_y
@@ -170,7 +170,7 @@ class Game:
                         if self.is_player_queen(row, col):
                             self.__players[player].set_queen_coordinates(row, col)
                             continue
-                        self.__players[player].increase_pieces()
+                        self.__players[player].increase_pawns()
         self.__current_player_index = 0
 
         self.__against_bot = True
@@ -399,7 +399,7 @@ class Game:
 
     def has_lost(self):
         player = self.__players[self.__current_player_index]
-        if player.get_pieces() < 2:
+        if player.get_pawns() < 2:
             return True
         return False
 
@@ -427,7 +427,7 @@ class Game:
         return self.__board[x][y] == 1 or self.__board[x][y] == 3
 
     def decrease_other_player_pawn_count(self):
-        self.__players[self.__current_player_index - 1].decrease_pieces()
+        self.__players[self.__current_player_index - 1].decrease_pawns()
 
     def move(self, old_x, old_y, new_x, new_y, type):
         self.__board[old_x][old_y] = 0
