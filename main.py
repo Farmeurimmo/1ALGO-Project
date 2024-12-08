@@ -40,7 +40,7 @@ class Game:
         self.__directions_pawns = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
         self.__n = 8
-        self.__current_player = []
+        self.__players = []
         self.__current_player_index = 0
         self.__selected_pawn = (-1, -1)
         self.__board = []
@@ -139,7 +139,7 @@ class Game:
         self.__canvas.config(width=self.__w, height=self.__h, highlightthickness=0, bd=0, bg="white")
         self.__canvas.pack(padx=CANVA_PADDING_X, pady=CANVA_PADDING_Y)
 
-        self.__current_player = self.create_players()
+        self.__players = self.create_players()
         if generate_board:
             self.__board = self.init_board()
 
@@ -168,9 +168,9 @@ class Game:
                 for col in range(self.__n):
                     if self.is_player(row, col):
                         if self.is_player_queen(row, col):
-                            self.__current_player[player].set_queen_coordinates(row, col)
+                            self.__players[player].set_queen_coordinates(row, col)
                             continue
-                        self.__current_player[player].increase_pieces()
+                        self.__players[player].increase_pieces()
         self.__current_player_index = 0
 
         self.__against_bot = True
@@ -398,7 +398,7 @@ class Game:
         self.update_labels()
 
     def has_lost(self):
-        player = self.__current_player[self.__current_player_index]
+        player = self.__players[self.__current_player_index]
         if player.get_pieces() < 2:
             return True
         return False
@@ -427,12 +427,12 @@ class Game:
         return self.__board[x][y] == 1 or self.__board[x][y] == 3
 
     def decrease_other_player_pawn_count(self):
-        self.__current_player[self.__current_player_index - 1].decrease_pieces()
+        self.__players[self.__current_player_index - 1].decrease_pieces()
 
     def move(self, old_x, old_y, new_x, new_y, type):
         self.__board[old_x][old_y] = 0
         self.__board[new_x][new_y] = type
-        player = self.__current_player[self.__current_player_index]
+        player = self.__players[self.__current_player_index]
         if player is not None:
             queen_x, queen_y = player.get_queen_coordinates()
             if queen_x == old_x and queen_y == old_y:
