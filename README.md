@@ -1,6 +1,6 @@
 # Mini-Projet Supinfo – Jeu de stratégie en Python
 
-Note obtenue: **87.5/100**
+Note obtenue: **90/100**
 
 ## Résumé
 
